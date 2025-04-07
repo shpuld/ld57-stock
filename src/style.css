@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --color-sell: #9c494f;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -7,21 +11,11 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
 }
 
 body {
@@ -34,55 +28,137 @@ h1 {
   line-height: 1.1;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vanilla:hover {
-  filter: drop-shadow(0 0 2em #3178c6aa);
+.current-price {
+  z-index: 1;
+  color: var(--color-green-200);
+  text-shadow: 0 0 10px var(--color-green-200);
+  opacity: 20%;
+  mix-blend-mode: color-dodge;
 }
 
-.card {
-  padding: 2em;
+.bg-gradient-green {
+  background-image: linear-gradient(180deg, #214029 0%, #212429 50%);
 }
 
-.read-the-docs {
-  color: #888;
+.bg-gradient-red {
+  background-image: linear-gradient(180deg, #4d2030 0%, #212429 50%);
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.change-up {
+  z-index: 1;
+  color: var(--color-green-400);
+  text-shadow: 0 0 5px var(--color-green-400);
+  opacity: 40%;
+  mix-blend-mode: color-dodge;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+.change-down {
+  z-index: 1;
+  color: var(--color-rose-500);
+  text-shadow: 0 0 5px var(--color-rose-500);
+  opacity: 40%;
+  mix-blend-mode: color-dodge;
+}
+
+.log-entry {
+  animation-name: logAnimation;
+  animation-duration: 0.1s;
+}
+
+.log-entry:nth-child(0) {
+  opacity: 25%;
+}
+
+.log-entry:nth-child(1) {
+  opacity: 20%;
+}
+
+.log-entry:nth-child(2) {
+  opacity: 20%;
+}
+
+.log-entry:nth-child(3) {
+  opacity: 15%;
+}
+
+.log-entry:nth-child(4) {
+  opacity: 10%;
+}
+
+.log-entry:nth-child(5) {
+  opacity: 5%;
+}
+
+.log-entry:nth-child(6) {
+  opacity: 0%;
+}
+
+
+.play-animation {
+  animation-name: clickAnimation;
+  animation-duration: 0.5s;
+  animation-iteration-count: 1;
+}
+
+.bar-animation {
+  animation-name: barAppearAnimation;
+  animation-duration: 0.75s;
+  animation-iteration-count: 1;
+}
+
+.text-drop {
+  animation-name: textDrop;
+  animation-duration: 1.0s;
+  animation-iteration-count: 1;
+}
+
+@keyframes logAnimation {
+  from {
+    transform: translateX(-150%)
   }
-  a:hover {
-    color: #747bff;
+
+  to {
+    transform: translateX(0%)
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+@keyframes clickAnimation {
+  from {
+    transform: scale(1.1, 1.5)
+  }
+  to {
+    transform: scale(1.0, 1.0)
+  }
+}
+
+@keyframes barAppearAnimation {
+  from {
+    filter: brightness(300%) grayscale(1.0)
+  }
+
+  to {
+    filter: brightness(100%) grayscale(0.0)
+  }
+}
+
+@keyframes barAppearAnimation {
+  from {
+    filter: brightness(300%) grayscale(1.0)
+  }
+
+  to {
+    filter: brightness(100%) grayscale(0.0)
+  }
+}
+
+@keyframes textDrop {
+  from {
+    transform: translateY(0px);
+    opacity: 100%;
+  }
+
+  to {
+    transform: translateY(100px);
+    opacity: 0%;
   }
 }
