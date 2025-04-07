@@ -1,10 +1,13 @@
+import bgmPath from './bgm.mp3'
+import bgImg from './frog3.jpg'
+
 const sharedButtonStyles =
   'flex-grow m-4 font-bold p-6 rounded-md shadow-2xl border-4 grayscale-0 disabled:grayscale-100 transition-[filter] duration-300 hover:brightness-125 disabled:hover:brightness-100'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <div id="root" class="relative w-full h-full flex flex-col justify-between bg-gradient-green">
   <div id="gradientRed" class="absolute inset-0 bg-gradient-red"></div>
-  <img id="wallpaper" class="absolute bottom-0 mix-blend-multiply opacity-30 max-h-full w-full object-contain" src="/frog3.jpg">
+  <img id="wallpaper" class="absolute bottom-0 mix-blend-multiply opacity-30 max-h-full w-full object-contain" src="${bgImg}">
   <div class="flex flex-row justify-between text-2xl z-10">
     <div class="w-full flex flex-row justify-between py-1 px-4 bg-[rgba(0,0,0,0.5)] text-green-300 opacity-50">
       <div class="flex flex-col items-center flex-1/3">
@@ -361,7 +364,7 @@ const raf = (time: number) => {
   }
 }
 
-const audio = new Audio('./bgm.mp3')
+const audio = new Audio(bgmPath)
 const promise = new Promise((resolve) => {
   audio.addEventListener('canplaythrough', resolve)
 })
