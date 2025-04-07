@@ -2,7 +2,7 @@ import bgmPath from './bgm.mp3'
 import bgImg from './frog3.jpg'
 
 const sharedButtonStyles =
-  'flex-grow m-4 font-bold p-6 rounded-md shadow-2xl border-4 grayscale-0 disabled:grayscale-100 transition-[filter] duration-300 hover:brightness-125 disabled:hover:brightness-100'
+  'flex-grow m-4 font-bold p-6 rounded-md shadow-2xl border-4 grayscale-0 disabled:grayscale-90 transition-[filter] duration-500 hover:brightness-125 disabled:hover:brightness-100'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <div id="root" class="relative w-full h-full flex flex-col justify-between bg-gradient-green">
@@ -29,6 +29,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
     <div id="currentValue" class="absolute w-full h-px opacity-20 bg-cyan-600 transition-transform duration-75"></div>
     <div class="absolute w-full bottom-16 flex flex-col items-center">
+      <span id="stockName" class="text-2xl stock-name"></span>
       <span id="stockPrice" class="text-8xl current-price"></span>
       <span id="dailyChange" class="text-2xl change-down transition-colors duration-150">-0.00 (0.00%)</span>
     </div>
@@ -40,10 +41,28 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <button id="sell" disabled class="${sharedButtonStyles} text-rose-200 disabled:text-rose-400 bg-rose-700/70 border-t-rose-500/70 border-l-rose-600/70 border-r-rose-800/70 border-b-rose-900/70">SELL</button>
     <button id="buy" class="${sharedButtonStyles} text-emerald-200 disabled:text-emerald-400 bg-emerald-600/70 border-t-emerald-400/70 border-l-emerald-500/70 border-r-emerald-700/70 border-b-emerald-800/70">BUY</button>
   </div>
-  <div id="startBackground" class="absolute w-full h-full bg-black/70 flex justify-center items-center text-4xl z-10">
-    <button id="startGame" class="${sharedButtonStyles} max-w-80 text-emerald-200 disabled:text-emerald-400 bg-emerald-600 border-t-emerald-400 border-l-emerald-500 border-r-emerald-700 border-b-emerald-800">START</button>
+  <div id="startBackground" class="absolute w-full h-full bg-black/70 flex flex-col justify-center items-center text-md z-10">
+    <h1 class="title mb-8 text-5xl">STOCK DEPTH</h1>
+    <div class="text-green-200 opacity-60 mb-8 text-lg text-center">
+      <p>You are a frog.</p>
+      <p>You trade stocks.</p>
+      <p>How long will you survive,</p>
+      <p class="mb-4">Before your funds are all lost?</p>
+    </div>
+    <div class="text-2xl text-green-200 opacity-70 mb-4">Which stock are you trading?</div>
+    <input value="FROG" id="stockNameInput" type="text" maxlength="8" class="text-2xl bg-black p-4 mb-4 rounded-sm border-2 border-green-200/50 text-center max-w-64"/>
+    <div class="flex">
+      <button id="startGame" class="${sharedButtonStyles} text-4xl max-w-80 text-emerald-200 disabled:text-emerald-400 bg-emerald-600 border-t-emerald-400 border-l-emerald-500 border-r-emerald-700 border-b-emerald-800">START</button>
+    </div>
   </div>
-  <div id="effects" class="absolute w-full-h-full">
+  <div id="gameOver" class="absolute w-full h-full bg-black/70 flex flex-col justify-center items-center z-10 hidden">
+    <div class="text-4xl mb-8 text-rose-500 opacity-70">Game Over</div>
+    <div class="opacity-70 text-green-200">You ran out of funds and shares!</div>
+    <div class="opacity-70 text-green-200">You survived for</div>
+    <div id="daysSurvived" class="opacity-80 text-green-300 text-2xl mb-4">12 days</div>
+    <div class="opacity-70 text-green-200">At richest, your total value was at</div>
+    <div id="maxFunds" class="opacity-80 text-green-300 text-2xl mb-24">$1234</div>
+    <button onclick="window.location.reload()" class="text-4xl font-bold p-6 rounded-md shadow-2xl border-4 max-w-80 text-emerald-200 disabled:text-emerald-400 bg-emerald-600 border-t-emerald-400 border-l-emerald-500 border-r-emerald-700 border-b-emerald-800">RETRY</button>
   </div>
 </div>
 `
@@ -127,8 +146,11 @@ let elements: Record<string, HTMLElement | null> = {
   dailyChange: null,
   gradientRed: null,
   wallpaper: null,
-  effects: null,
+  gameOver: null,
   log: null,
+  daysSurvived: null,
+  maxFunds: null,
+  stockName: null,
 }
 
 let isElementsSet = false
@@ -144,6 +166,9 @@ const setElements = () => {
       elements[key].addEventListener('click', (event) =>
         exchangeStock(-1, event.target),
       )
+    }
+    if (!elements[key]) {
+      console.warn('missing element', key)
     }
   }
   const values = Object.values(elements)
@@ -177,6 +202,8 @@ let floor = 600
 
 let trendLerp = 1.0
 
+let maxValue = 0
+
 const logText = {
   BUY: 'Purchased a share for $',
   SELL: 'Sold a share for $',
@@ -201,7 +228,19 @@ const addLog = (
   }
 }
 
+let isGameOver = false
+const endGame = () => {
+  isGameOver = true
+  elements.gameOver!.classList.remove('hidden')
+  elements.daysSurvived!.textContent = day.toFixed(0) + ' days'
+  elements.maxFunds!.textContent = '$' + maxValue.toFixed(0)
+}
+
 const raf = (time: number) => {
+  if (isGameOver) {
+    return
+  }
+
   if (oldTime === 0) {
     oldTime = time
     nextPriceUpdate = time - (time % 100) + 100
@@ -304,11 +343,15 @@ const raf = (time: number) => {
 
       nextRentDay -= 1
       if (nextRentDay === 0) {
-        const rentAmount = 800
+        const rentAmount = 600
         while (funds < rentAmount && stocksOwned > 0) {
           exchangeStock(-1, elements.sell!, true)
         }
         funds -= rentAmount
+        if (funds < 0) {
+          endGame()
+          return
+        }
         addLog('RENT', rentAmount)
         nextRentDay = 7
       }
@@ -347,7 +390,12 @@ const raf = (time: number) => {
   canBuyOld = canBuy
   canSellOld = canSell
 
-  elements.portfolioValue!.innerHTML = `$${portfolioValue().toFixed(2)}`
+  const portfolio = portfolioValue()
+  if (portfolio + funds > maxValue) {
+    maxValue = portfolio + funds
+  }
+
+  elements.portfolioValue!.innerHTML = `$${portfolio.toFixed(2)}`
   elements.stocksOwned!.innerHTML = `${stocksOwned.toString()}`
   elements.funds!.innerHTML = `$${funds.toFixed(2)}`
 
@@ -365,20 +413,14 @@ const raf = (time: number) => {
 }
 
 const audio = new Audio(bgmPath)
-const promise = new Promise((resolve) => {
-  audio.addEventListener('canplaythrough', resolve)
-})
 
-const start = async () => {
-  await promise
+function start() {
+  document.querySelector('#stockName')!.textContent = document
+    .querySelector<HTMLInputElement>('#stockNameInput')!
+    .value.toUpperCase()
   document.querySelector('#startBackground')?.remove()
   requestAnimationFrame(raf)
-  /*
-  audio.addEventListener('ended', () => {
-    audio.currentTime = 0
-    audio.play()
-  })
-    */
+
   audio.loop = true
   audio.play()
 }
